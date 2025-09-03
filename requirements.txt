@@ -1,0 +1,11 @@
+pandas
+numpy==1.23.5
+tensorflow==2.12.0
+Pillow
+scikit-learn
+fastapi
+uvicorn[standard]
+python-multipart
+requests
+beautifulsoup4
+matplotlib
