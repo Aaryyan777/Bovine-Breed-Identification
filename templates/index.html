@@ -1,0 +1,116 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bovine Breed Recognition</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            color: #1c1e21;
+            margin-bottom: 20px;
+        }
+        p {
+            color: #606770;
+            margin-bottom: 30px;
+        }
+        .upload-btn-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            cursor: pointer;
+        }
+        .btn {
+            border: 2px solid #007bff;
+            color: #007bff;
+            background-color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .upload-btn-wrapper input[type=file] {
+            font-size: 100px;
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .upload-btn-wrapper:hover .btn {
+            background-color: #007bff;
+            color: white;
+        }
+        #fileName {
+            margin-top: 15px;
+            color: #606770;
+            font-style: italic;
+        }
+        #submitBtn {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 18px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.3s ease;
+            display: none; /* Initially hidden */
+        }
+        #submitBtn:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Indian Bovine Breed Identifier</h1>
+        <p>Upload an image of a cow or buffalo to predict its breed.</p>
+        <form action="/predict" method="post" enctype="multipart/form-data">
+            <div class="upload-btn-wrapper">
+                <button class="btn">Choose an Image</button>
+                <input type="file" name="file" id="fileInput" onchange="updateFileName(this)" required>
+            </div>
+            <div id="fileName">No file chosen</div>
+            <br>
+            <button type="submit" id="submitBtn">Predict Breed</button>
+        </form>
+    </div>
+
+    <script>
+        function updateFileName(input) {
+            const fileNameDisplay = document.getElementById('fileName');
+            const submitBtn = document.getElementById('submitBtn');
+            if (input.files && input.files.length > 0) {
+                fileNameDisplay.textContent = input.files[0].name;
+                submitBtn.style.display = 'inline-block'; // Show the button
+            } else {
+                fileNameDisplay.textContent = 'No file chosen';
+                submitBtn.style.display = 'none'; // Hide the button
+            }
+        }
+    </script>
+</body>
+</html>
