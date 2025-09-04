@@ -3,8 +3,10 @@ import tensorflow as tf
 import numpy as np
 import wikipediaapi
 from PIL import Image
-from flask import Flask, request, render_template, url_for, redirect
+from flask import Flask, request, render_template, url_for, redirect, jsonify
 from werkzeug.utils import secure_filename
+import base64
+import io
 
 # --- Flask App Initialization ---
 app = Flask(__name__)
@@ -46,13 +48,12 @@ wiki_wiki = wikipediaapi.Wikipedia(
 )
 
 # --- Core Prediction Function ---
-def get_prediction(image_path):
+def get_prediction_from_pil_image(pil_image):
     """
-    Takes an image path, preprocesses it, and returns the predicted breed name.
+    Takes a PIL image, preprocesses it, and returns the predicted breed name.
     """
     try:
-        img = Image.open(image_path).convert('RGB')
-        img = img.resize((IMG_WIDTH, IMG_HEIGHT))
+        img = pil_image.resize((IMG_WIDTH, IMG_HEIGHT))
         img_array = tf.keras.preprocessing.image.img_to_array(img)
         img_array = tf.expand_dims(img_array, 0)  # Create a batch
 
@@ -91,43 +92,70 @@ def index():
 
 @app.route('/predict', methods=['POST'])
 def upload_and_predict():
-    """Handle file upload, prediction, and render result page."""
-    if 'file' not in request.files:
-        return redirect(request.url)
-    
-    file = request.files['file']
+    """
+    Handle file upload (for web interface) or JSON API request (for orbit-den),
+    perform prediction, and render appropriate response.
+    """
+    if request.is_json:
+        # --- Handle JSON API request from orbit-den ---
+        data = request.json
+        if not data or 'imageBase64' not in data:
+            return jsonify({"error": "imageBase64 is required in JSON body"}), 400
 
-    if file.filename == '' or not file:
-        return redirect(request.url)
+        image_b64 = data['imageBase64']
+        # Remove data:image/jpeg;base64, prefix if present
+        if ';base64,' in image_b64:
+            image_b64 = image_b64.split(';base64,')[-1]
 
-    if file:
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
+        try:
+            image_bytes = base64.b64decode(image_b64)
+            img = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+        except Exception as e:
+            return jsonify({"error": f"Failed to decode image: {e}"}), 400
 
-        # Get prediction
-        predicted_breed = get_prediction(filepath)
+        predicted_breed = get_prediction_from_pil_image(img)
+        
+        # Return JSON response for API
+        return jsonify({"predictions": [{"breed": predicted_breed, "confidence": 1.0}]})
 
-        # Get Wikipedia summary
-        # We add "(cattle)" to the search query for better specificity
-        wiki_summary = get_wiki_summary(f"{predicted_breed} (cattle)")
-        if not wiki_summary:
-            wiki_summary = get_wiki_summary(predicted_breed)
+    else:
+        # --- Handle traditional web form submission ---
+        if 'file' not in request.files:
+            return redirect(request.url)
+        
+        file = request.files['file']
 
-        # The path passed to the template must be relative to the 'static' folder
-        image_file_for_template = f'uploads/{filename}'
+        if file.filename == '' or not file:
+            return redirect(request.url)
 
-        return render_template('result.html', 
-                               breed_name=predicted_breed, 
-                               summary=wiki_summary, 
-                               image_file=image_file_for_template)
+        if file:
+            filename = secure_filename(file.filename)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
 
-    return redirect('/')
+            # Load image from saved file for prediction
+            img = Image.open(filepath).convert('RGB')
+            predicted_breed = get_prediction_from_pil_image(img)
+
+            # Get Wikipedia summary
+            wiki_summary = get_wiki_summary(f"{predicted_breed} (cattle)")
+            if not wiki_summary:
+                wiki_summary = get_wiki_summary(predicted_breed)
+
+            # The path passed to the template must be relative to the 'static' folder
+            image_file_for_template = f'uploads/{filename}'
+
+            return render_template('result.html', 
+                                   breed_name=predicted_breed, 
+                                   summary=wiki_summary, 
+                                   image_file=image_file_for_template)
+
+        return redirect('/')
 
 # --- Main Execution ---
 if __name__ == '__main__':
     if model and class_names:
         print("\nSetup complete. Starting Flask server...")
-        app.run(debug=True)
+        app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
     else:
         print("\nCould not start Flask server due to errors during setup.")
