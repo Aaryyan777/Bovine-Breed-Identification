@@ -12,7 +12,7 @@ import io
 app = Flask(__name__)
 
 # --- Configuration ---
-MODEL_PATH = os.path.join('models', 'breed_recognition_model_v4.h5')
+MODEL_PATH = os.path.join('models', 'breed_recognition_model_v2.h5')
 CLASS_NAMES_PATH = os.path.join('models', 'class_names.txt')
 UPLOAD_FOLDER = os.path.join('static', 'uploads')
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
