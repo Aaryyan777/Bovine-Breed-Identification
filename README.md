@@ -100,6 +100,16 @@ python src/train_model.py
 ```
 The script will automatically handle data loading, preprocessing, model building, and training. The best-performing model will be saved to the `models/` directory.
 
+### 5.3. Testing/Using
+1.  Clone the repository
+2.  Install required dependencies
+3.  Run the Web Interface:
+    ```bash
+    python app.py
+    ```
+4. Upload the image you want to Identify and Classify
+5. Get results
+
 ## 6. Future Work
 
 While the current model achieves a respectable accuracy of ~73%, the goal is to surpass 90%. The following steps are planned to achieve this:
