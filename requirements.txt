@@ -9,3 +9,6 @@ python-multipart
 requests
 beautifulsoup4
 matplotlib
+gradio
+Flask
+wikipedia-api
